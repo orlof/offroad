@@ -32,6 +32,12 @@ class MapMaker(object):
             self.rect.centerx - self.crosshair.get_width() // 2, self.rect.centery - self.crosshair.get_height() // 2)
         self.tile_size = {2: 240000, 3: 120000, 4: 48000, 5: 24000, 6: 12000, 7: 4800, 8: 2400, 9: 1200, 10: 480}
 
+    def get_step(self, level):
+        return self.tile_size[level] // 10
+
+    def get_wgs84_step(self, level):
+        return self.tile_size[level] * 0.0000002
+
     def valid_tile(self, tile):
         level, col, row = tile
         size = self.tile_size[level]
@@ -162,10 +168,8 @@ def main_loop():
                 return
             if event.type is pygame.KEYDOWN and event.key == ord("+") and level < 10:
                 level += 1
-                print(level)
             if event.type is pygame.KEYDOWN and event.key == ord("-") and level > 2:
                 level -= 1
-                print(level)
 
         key_pressed = pygame.key.get_pressed()
 
