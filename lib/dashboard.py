@@ -50,7 +50,6 @@ def blit_monospace(surface, rect, font, txt, color):
     for a in txt:
         rendered = font.render(a, False, color)
         surface.blit(rendered, (x, y))
-        print("%s %r %r %d %d" % (a, color, rendered, x, y))
         x += size[0]
 
 
@@ -146,13 +145,14 @@ def read_socket(sock, amount):
             if not data:
                 raise RuntimeError("Socket closed")
             return data
-        except TimeoutError:
+        except socket.timeout:
             pass
 
 def android_reader():
     global azimuth, pitch, roll, speed, bearing, latitude, longitude
     # Create a TCP/IP socket
     while running:
+        print (running)
         try:
             sock = socket.socket()
             sock.settimeout(0.5)
@@ -190,20 +190,8 @@ def android_reader():
 
 SCREEN_RESOLUTION = (800, 480)
 
-pygame.init()
-clock = pygame.time.Clock()
-
-#screen = pygame.display.set_mode(SCREEN_RESOLUTION, pygame.FULLSCREEN)
-screen = pygame.display.set_mode(SCREEN_RESOLUTION)
-pygame.display.set_caption("Carputer")
-
 directory, file = os.path.split(os.path.abspath(sys.argv[0]))
 
-side = AngleMeter("images/side_profile.png", (0, 0, 200, 200))
-back = AngleMeter("images/back_profile.png", (200, 0, 200, 200), ratio=side.ratio)
-speedometer = SpeedoMeter((400, 0, 400, 200))
-magnetometer = Compass("images/compass.png", (0, 200, 200, 200))
-map = MapMaker((200, 200, 600, 280))
 pitch = 0
 roll = 0
 speed = 0
@@ -211,65 +199,93 @@ azimuth = 0
 bearing = 0
 latitude = 60.63856512819056
 longitude = 24.880031939642702
-
-t = threading.Thread(target=android_reader)
 running = True
-t.start()
 
-while True:
-    clock.tick(20)
 
-    for event in pygame.event.get():
-        if event.type is pygame.QUIT:
-            running = False
-            t.join()
-            pygame.display.quit()
-            exit()
+def main():
+    global running
 
-    key_pressed = pygame.key.get_pressed()
+    pygame.init()
 
-    if key_pressed[pygame.K_ESCAPE]:
+    t = threading.Thread(target=android_reader)
+    t.start()
+
+    #screen = pygame.display.set_mode(SCREEN_RESOLUTION, pygame.FULLSCREEN)
+    pygame.display.set_caption("Offroad")
+
+    try:
+        main_loop()
+    finally:
+        pygame.display.quit()
         running = False
         t.join()
-        pygame.display.quit()
-        exit()
 
-    if key_pressed[pygame.K_DOWN]:
-        pitch -= 1
-        latitude -= 0.0001
-    if key_pressed[pygame.K_UP]:
-        pitch += 1
-        latitude += 0.0001
 
-    if key_pressed[pygame.K_LEFT]:
-        roll -= 1
-        longitude -= 0.0001
-    if key_pressed[pygame.K_RIGHT]:
-        roll += 1
-        longitude += 0.0001
+def main_loop():
+    global pitch, roll, speed, longitude, latitude, bearing, azimuth
+    screen = pygame.display.set_mode(SCREEN_RESOLUTION)
 
-    if key_pressed[pygame.K_w]:
-        speed += 1
-    if key_pressed[pygame.K_s]:
-        speed -= 1
+    clock = pygame.time.Clock()
 
-    if key_pressed[pygame.K_a]:
-        azimuth += 1
-    if key_pressed[pygame.K_d]:
-        azimuth -= 1
+    side = AngleMeter("images/side_profile.png", (0, 0, 200, 200))
+    back = AngleMeter("images/back_profile.png", (0, 200, 200, 200), ratio=side.ratio)
+    speedometer = SpeedoMeter((0, 400, 200, 80))
+    #magnetometer = Compass("images/compass.png", (0, 200, 200, 200))
+    map = MapMaker((200, 0, 600, 480))
 
-    if key_pressed[pygame.K_q]:
-        bearing += 1
-    if key_pressed[pygame.K_e]:
-        bearing -= 1
+    while True:
+        clock.tick(20)
 
-    screen.fill((0, 0, 0))
-    side.draw(screen, pitch, side.bg_color if -50 < pitch < 50 else side.warn_color)
-    back.draw(screen, -roll, back.bg_color if -35 < roll < 35 else back.warn_color)
-    speedometer.draw(screen, speed, speedometer.bg_color if speed < 80 else speedometer.warn_color)
-    magnetometer.draw(screen, (azimuth, (255, 0, 0)), (bearing, (0, 0, 255)))
-    map.draw_wgs84(screen, latitude, longitude)
-#    gps_bearing.draw(screen, bearing)
+        for event in pygame.event.get():
+            if event.type is pygame.QUIT:
+                return
 
-    pygame.display.flip()
+        key_pressed = pygame.key.get_pressed()
+
+        if key_pressed[pygame.K_ESCAPE]:
+            return
+
+        if key_pressed[pygame.K_DOWN]:
+            pitch -= 1
+            latitude -= 0.0001
+        if key_pressed[pygame.K_UP]:
+            pitch += 1
+            latitude += 0.0001
+
+        if key_pressed[pygame.K_LEFT]:
+            roll -= 1
+            longitude -= 0.0001
+        if key_pressed[pygame.K_RIGHT]:
+            roll += 1
+            longitude += 0.0001
+
+        if key_pressed[pygame.K_w]:
+            speed += 1
+        if key_pressed[pygame.K_s]:
+            speed -= 1
+
+        if key_pressed[pygame.K_a]:
+            azimuth += 1
+        if key_pressed[pygame.K_d]:
+            azimuth -= 1
+
+        if key_pressed[pygame.K_q]:
+            bearing += 1
+        if key_pressed[pygame.K_e]:
+            bearing -= 1
+
+        screen.fill((0, 0, 0))
+        side.draw(screen, pitch, side.bg_color if -50 < pitch < 50 else side.warn_color)
+        back.draw(screen, -roll, back.bg_color if -35 < roll < 35 else back.warn_color)
+        speedometer.draw(screen, speed, speedometer.bg_color if speed < 80 else speedometer.warn_color)
+        # magnetometer.draw(screen, (azimuth, (255, 0, 0)), (bearing, (0, 0, 255)))
+        map.draw_wgs84(screen, latitude, longitude)
+        map.draw_fov(screen, azimuth, (255, 0, 0))
+        map.draw_fov(screen, bearing, (0, 0, 255))
+    #    gps_bearing.draw(screen, bearing)
+
+        pygame.display.flip()
+
+if __name__ == "__main__":
+    main()
 
