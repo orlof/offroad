@@ -66,7 +66,8 @@ class Meter(object):
 
 
 class AngleMeter(Meter):
-    def __init__(self, image_file, geometry, frame_color=(0x98, 0x6c, 0x6a), bg_color=(0x78, 0x4f, 0x41), warn_color=(128, 0, 0), txt_color=(0xb3, 0x99, 0x22), ratio=None):
+    def __init__(self, image_file, geometry, frame_color=(0x98, 0x6c, 0x6a), bg_color=(0x78, 0x4f, 0x41),
+                 warn_color=(128, 0, 0), txt_color=(0xb3, 0x99, 0x22), ratio=None):
         super().__init__(geometry, frame_color, bg_color, warn_color, txt_color)
 
         self.orig_img = pygame.image.load(os.path.join(directory, image_file))
@@ -93,7 +94,8 @@ class AngleMeter(Meter):
 
 
 class SpeedoMeter(Meter):
-    def __init__(self, geometry, frame_color=(0x98, 0x6c, 0x6a), bg_color=(0x78, 0x4f, 0x41), warn_color=(128, 0, 0), txt_color=(0xb3, 0x99, 0x22), fmt="%3d"):
+    def __init__(self, geometry, frame_color=(0x98, 0x6c, 0x6a), bg_color=(0x78, 0x4f, 0x41), warn_color=(128, 0, 0),
+                 txt_color=(0xb3, 0x99, 0x22), fmt="%3d"):
         super().__init__(geometry, frame_color, bg_color, warn_color, txt_color)
 
         self.fmt = fmt
@@ -107,7 +109,8 @@ class SpeedoMeter(Meter):
 
 
 class Compass(Meter):
-    def __init__(self, image_file, geometry, frame_color=(0x98, 0x6c, 0x6a), bg_color=(0x78, 0x4f, 0x41), warn_color=(128, 0, 0), txt_color=(0xb3, 0x99, 0x22)):
+    def __init__(self, image_file, geometry, frame_color=(0x98, 0x6c, 0x6a), bg_color=(0x78, 0x4f, 0x41),
+                 warn_color=(128, 0, 0), txt_color=(0xb3, 0x99, 0x22)):
         super().__init__(geometry, frame_color, bg_color, warn_color, txt_color)
 
         self.orig_img = pygame.image.load(os.path.join(directory, image_file))
@@ -148,6 +151,7 @@ def read_socket(sock, amount):
             return data
         except socket.timeout:
             pass
+
 
 def android_reader():
     global azimuth, pitch, roll, speed, bearing, latitude, longitude, altitude
@@ -190,7 +194,7 @@ def android_reader():
             pygame.time.wait(1000)
 
 
-SCREEN_RESOLUTION = (800, 480)
+SCREEN_RESOLUTION = (1280, 800)
 
 directory, file = os.path.split(os.path.abspath(sys.argv[0]))
 
@@ -213,7 +217,6 @@ def main():
     t = threading.Thread(target=android_reader)
     t.start()
 
-    #screen = pygame.display.set_mode(SCREEN_RESOLUTION, pygame.FULLSCREEN)
     pygame.display.set_caption("Offroad")
 
     try:
@@ -226,16 +229,18 @@ def main():
 
 def main_loop():
     global pitch, roll, speed, longitude, latitude, bearing, azimuth, altitude
-    screen = pygame.display.set_mode(SCREEN_RESOLUTION)
+
+    screen = pygame.display.set_mode(SCREEN_RESOLUTION, pygame.FULLSCREEN)
+    # screen = pygame.display.set_mode(SCREEN_RESOLUTION)
 
     clock = pygame.time.Clock()
 
-    side = AngleMeter("images/side_profile.png", (0, 0, 200, 180))
-    back = AngleMeter("images/back_profile.png", (0, 180, 200, 180), ratio=side.ratio)
-    speedometer = SpeedoMeter((0, 360, 200, 60), fmt="%4s")
-    altimeter = SpeedoMeter((0, 420, 200, 60), fmt="%4s")
-    #magnetometer = Compass("images/compass.png", (0, 200, 200, 200))
-    map = MapMaker((200, 0, 600, 480))
+    side = AngleMeter("images/side_profile.png", (0, 0, 300, 300))
+    back = AngleMeter("images/back_profile.png", (0, 300, 300, 300), ratio=side.ratio)
+    speedometer = SpeedoMeter((0, 600, 300, 100), fmt="%4s")
+    altimeter = SpeedoMeter((0, 700, 300, 100), fmt="%4s")
+    # magnetometer = Compass("images/compass.png", (0, 200, 200, 200))
+    map = MapMaker((300, 0, 980, 800))
     map_level = 4
 
     while True:
@@ -292,11 +297,10 @@ def main_loop():
         map.draw_wgs84(screen, latitude, longitude, map_level)
         map.draw_fov(screen, azimuth, (255, 0, 0))
         map.draw_fov(screen, bearing, (0, 0, 255))
-    #    gps_bearing.draw(screen, bearing)
+        # gps_bearing.draw(screen, bearing)
 
         pygame.display.flip()
 
 
 if __name__ == "__main__":
     main()
-
