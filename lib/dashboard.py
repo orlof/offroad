@@ -260,18 +260,26 @@ def main_loop():
             return
 
         if key_pressed[pygame.K_DOWN]:
-            pitch -= 1
-            latitude -= map.get_wgs84_step(map_level)
+            if pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                pitch -= 1
+            else:
+                latitude -= map.get_wgs84_step(map_level)
         if key_pressed[pygame.K_UP]:
-            pitch += 1
-            latitude += map.get_wgs84_step(map_level)
+            if pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                pitch += 1
+            else:
+                latitude += map.get_wgs84_step(map_level)
 
         if key_pressed[pygame.K_LEFT]:
-            roll -= 1
-            longitude -= map.get_wgs84_step(map_level)
+            if pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                roll -= 1
+            else:
+                longitude -= map.get_wgs84_step(map_level)
         if key_pressed[pygame.K_RIGHT]:
-            roll += 1
-            longitude += map.get_wgs84_step(map_level)
+            if pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                roll += 1
+            else:
+                longitude += map.get_wgs84_step(map_level)
 
         if key_pressed[pygame.K_w]:
             speed += 1
