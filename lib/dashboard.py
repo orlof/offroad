@@ -290,6 +290,9 @@ def main_loop():
                         elif y > 3 * SCREEN_RESOLUTION[1] / 4:
                             if map_level < 10:
                                 map_level += 1
+                        else:
+                            centered = True
+
                 drag = False
 
         key_pressed = pygame.key.get_pressed()
