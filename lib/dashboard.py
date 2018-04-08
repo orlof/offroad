@@ -7,6 +7,7 @@ import math
 import pygame
 import sys
 
+import map_maker
 from map_maker import MapMaker
 
 font_cache = {}
@@ -154,7 +155,7 @@ def read_socket(sock, amount):
 
 
 def android_reader():
-    global azimuth, pitch, roll, speed, bearing, latitude, longitude, altitude
+    global azimuth, pitch, roll, speed, bearing, gps_east, gps_north, altitude
     # Create a TCP/IP socket
     while running:
         print (running)
@@ -183,10 +184,12 @@ def android_reader():
                 roll = angles["roll"]
 
                 loc = data["location"]
+                print (loc["speed"])
                 speed = round(3.6 * loc["speed"])
                 bearing = loc["bearing"]
-                latitude = loc["latitude"]
-                longitude = loc["longitude"]
+                la = loc["latitude"]
+                lo = loc["longitude"]
+                gps_east, gps_north = map_maker.WGS84_to_TM35FIN(la, lo)
                 altitude = loc["altitude"]
 
         except (RuntimeError, ConnectionError) as e:
@@ -203,8 +206,8 @@ roll = 0
 speed = 0
 azimuth = 0
 bearing = 0
-latitude = 60.63856512819056
-longitude = 24.880031939642702
+man_east = gps_east = 410000
+man_north = gps_north = 6750000
 altitude = 100
 running = True
 
@@ -228,7 +231,7 @@ def main():
 
 
 def main_loop():
-    global pitch, roll, speed, longitude, latitude, bearing, azimuth, altitude
+    global pitch, roll, speed, gps_east, gps_north, man_east, man_north, bearing, azimuth, altitude
 
     screen = pygame.display.set_mode(SCREEN_RESOLUTION, pygame.FULLSCREEN)
     # screen = pygame.display.set_mode(SCREEN_RESOLUTION)
@@ -244,7 +247,8 @@ def main_loop():
     map_level = 4
 
     mouse_sx = mouse_sy = 0
-    mouse_dn = False
+    drag = mouse_dn = False
+    centered = True
 
     while True:
         clock.tick(20)
@@ -252,49 +256,89 @@ def main_loop():
         for event in pygame.event.get():
             if event.type is pygame.QUIT:
                 return
+
             if event.type is pygame.KEYDOWN and event.key == ord("+") and map_level < 10:
                 map_level += 1
             if event.type is pygame.KEYDOWN and event.key == ord("-") and map_level > 2:
                 map_level -= 1
+
+            if event.type is pygame.MOUSEMOTION and mouse_dn:
+                if centered:
+                    man_east = gps_east
+                    man_north = gps_north
+                centered = False
+                drag = True
+
+                x, y = pygame.mouse.get_pos()
+                de, dn = map.delta_px_to_TM35FIN(x-mouse_sx, y-mouse_sy, map_level)
+                man_east -= de
+                man_north += dn
+                mouse_sx = x
+                mouse_sy = y
+
             if event.type is pygame.MOUSEBUTTONDOWN:
                 mouse_dn = True
                 mouse_sx, mouse_sy = pygame.mouse.get_pos()
             if event.type is pygame.MOUSEBUTTONUP:
-                x, y = pygame.mouse.get_pos()
-                if abs(x - mouse_sx) < 10 and abs(y - mouse_sy) < 10:
-                    if y < SCREEN_RESOLUTION[1] / 2:
-                        if map_level > 2:
-                            map_level -= 1
-                    else:
-                        if map_level < 10:
-                            map_level += 1
+                mouse_dn = False
+                if not drag:
+                    x, y = pygame.mouse.get_pos()
+                    if abs(x - mouse_sx) < 10 and abs(y - mouse_sy) < 10:
+                        if y < SCREEN_RESOLUTION[1] / 4:
+                            if map_level > 2:
+                                map_level -= 1
+                        elif y > 3 * SCREEN_RESOLUTION[1] / 4:
+                            if map_level < 10:
+                                map_level += 1
+                drag = False
 
         key_pressed = pygame.key.get_pressed()
 
         if key_pressed[pygame.K_ESCAPE]:
             return
 
+        if key_pressed[pygame.K_c]:
+            centered = True
+
         if key_pressed[pygame.K_DOWN]:
             if pygame.key.get_mods() & pygame.KMOD_SHIFT:
                 pitch -= 1
             else:
-                latitude -= map.get_wgs84_step(map_level)
+                if centered:
+                    man_east = gps_east
+                    man_north = gps_north
+                centered = False
+                man_north -= map.get_step(map_level)
+
         if key_pressed[pygame.K_UP]:
             if pygame.key.get_mods() & pygame.KMOD_SHIFT:
                 pitch += 1
             else:
-                latitude += map.get_wgs84_step(map_level)
+                if centered:
+                    man_east = gps_east
+                    man_north = gps_north
+                centered = False
+                man_north += map.get_step(map_level)
 
         if key_pressed[pygame.K_LEFT]:
             if pygame.key.get_mods() & pygame.KMOD_SHIFT:
                 roll -= 1
             else:
-                longitude -= map.get_wgs84_step(map_level)
+                if centered:
+                    man_east = gps_east
+                    man_north = gps_north
+                centered = False
+                man_east -= map.get_step(map_level)
+
         if key_pressed[pygame.K_RIGHT]:
             if pygame.key.get_mods() & pygame.KMOD_SHIFT:
                 roll += 1
             else:
-                longitude += map.get_wgs84_step(map_level)
+                if centered:
+                    man_east = gps_east
+                    man_north = gps_north
+                centered = False
+                man_east += map.get_step(map_level)
 
         if key_pressed[pygame.K_w]:
             speed += 1
@@ -317,7 +361,12 @@ def main_loop():
         speedometer.draw(screen, speed, speedometer.bg_color if speed < 80 else speedometer.warn_color)
         altimeter.draw(screen, altitude, altimeter.bg_color)
         # magnetometer.draw(screen, (azimuth, (255, 0, 0)), (bearing, (0, 0, 255)))
-        map.draw_wgs84(screen, latitude, longitude, map_level)
+
+        if centered:
+            map.draw(screen, gps_east, gps_north, map_level)
+        else:
+            map.draw(screen, man_east, man_north, map_level)
+
         map.draw_fov(screen, azimuth, (255, 0, 0))
         map.draw_fov(screen, bearing, (0, 0, 255))
         # gps_bearing.draw(screen, bearing)

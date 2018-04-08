@@ -19,6 +19,11 @@ START_EAST = 20000
 START_NORTH = 6570000
 
 
+def WGS84_to_TM35FIN(la, lo):
+    TM35FIN = WGS84lalo_to_ETRSTM35FINxy({"La": la, "Lo": lo})
+    return round(TM35FIN['E']), round(TM35FIN['N'])
+
+
 class MapMaker(object):
     def __init__(self, geometry, frame_color=(0x98, 0x6c, 0x6a)):
         self.tiles = {}
@@ -35,8 +40,9 @@ class MapMaker(object):
     def get_step(self, level):
         return self.tile_size[level] // 10
 
-    def get_wgs84_step(self, level):
-        return self.tile_size[level] * 0.0000002
+    def delta_px_to_TM35FIN(self, de, dn, level):
+        mul = self.tile_size[level] // 240
+        return mul * de, mul * dn
 
     def valid_tile(self, tile):
         level, col, row = tile
@@ -64,13 +70,6 @@ class MapMaker(object):
         y = self.rect.centery - (dN // (size // 240))
 
         return x, y
-
-    def draw_wgs84(self, surface, la, lo, level):
-        TM35FIN = WGS84lalo_to_ETRSTM35FINxy({"La": la, "Lo": lo})
-
-        # TM35FIN = WGS84lalo_to_ETRSTM35FINxy({"La": Str_to_CoordinateValue(la), "Lo": Str_to_CoordinateValue(lo)})
-        E, N = round(TM35FIN['E']), round(TM35FIN['N'])
-        self.draw(surface, E, N, level)
 
     def draw(self, surface, E, N, level):
         self.center = E, N
