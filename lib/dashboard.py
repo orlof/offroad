@@ -243,6 +243,9 @@ def main_loop():
     map = MapMaker((300, 0, 980, 800))
     map_level = 4
 
+    mouse_sx = mouse_sy = 0
+    mouse_dn = False
+
     while True:
         clock.tick(20)
 
@@ -253,6 +256,18 @@ def main_loop():
                 map_level += 1
             if event.type is pygame.KEYDOWN and event.key == ord("-") and map_level > 2:
                 map_level -= 1
+            if event.type is pygame.MOUSEBUTTONDOWN:
+                mouse_dn = True
+                mouse_sx, mouse_sy = pygame.mouse.get_pos()
+            if event.type is pygame.MOUSEBUTTONUP:
+                x, y = pygame.mouse.get_pos()
+                if abs(x - mouse_sx) < 10 and abs(y - mouse_sy) < 10:
+                    if y < SCREEN_RESOLUTION[1] / 2:
+                        if map_level > 2:
+                            map_level -= 1
+                    else:
+                        if map_level < 10:
+                            map_level += 1
 
         key_pressed = pygame.key.get_pressed()
 
