@@ -232,7 +232,8 @@ def main_loop():
     global pitch, roll, speed, gps_east, gps_north, man_east, man_north, bearing, azimuth, altitude
 
     screen = pygame.display.set_mode(SCREEN_RESOLUTION, pygame.FULLSCREEN)
-    pygame.mouse.set_visible(False)
+    pygame.mouse.set_cursor((8, 8), (0, 0), (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0))
+    # pygame.mouse.set_visible(False)
 
     clock = pygame.time.Clock()
 
