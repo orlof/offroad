@@ -158,7 +158,6 @@ def android_reader():
     global azimuth, pitch, roll, speed, bearing, gps_east, gps_north, altitude
     # Create a TCP/IP socket
     while running:
-        print (running)
         try:
             sock = socket.socket()
             sock.settimeout(0.5)
@@ -184,14 +183,11 @@ def android_reader():
                 roll = angles["roll"]
 
                 loc = data["location"]
-                #print (loc["speed"])
                 speed = round(3.6 * loc["speed"])
                 bearing = loc["bearing"]
                 la = loc["latitude"]
                 lo = loc["longitude"]
-                #print("lalo: %s, %s" % (la, lo))
                 gps_east, gps_north = map_maker.WGS84_to_TM35FIN(la, lo)
-                #print("TM35FIN: %s, %s" % (gps_east, gps_north))
                 altitude = loc["altitude"]
 
         except (RuntimeError, ConnectionError, OSError) as e:
@@ -236,7 +232,7 @@ def main_loop():
     global pitch, roll, speed, gps_east, gps_north, man_east, man_north, bearing, azimuth, altitude
 
     screen = pygame.display.set_mode(SCREEN_RESOLUTION, pygame.FULLSCREEN)
-    # screen = pygame.display.set_mode(SCREEN_RESOLUTION)
+    pygame.mouse.set_visible(False)
 
     clock = pygame.time.Clock()
 
@@ -370,7 +366,6 @@ def main_loop():
         # magnetometer.draw(screen, (azimuth, (255, 0, 0)), (bearing, (0, 0, 255)))
 
         if centered:
-            # print ("%s, %s" % (gps_east, gps_north))
             map.draw(screen, gps_east, gps_north, map_level)
         else:
             map.draw(screen, man_east, man_north, map_level)
