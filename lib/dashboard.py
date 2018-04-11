@@ -194,9 +194,9 @@ def android_reader():
                 #print("TM35FIN: %s, %s" % (gps_east, gps_north))
                 altitude = loc["altitude"]
 
-        except (RuntimeError, ConnectionError) as e:
+        except (RuntimeError, ConnectionError, OSError) as e:
             print(e)
-            pygame.time.wait(1000)
+            pygame.time.wait(2000)
 
 
 SCREEN_RESOLUTION = (1280, 800)
