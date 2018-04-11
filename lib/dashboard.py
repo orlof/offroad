@@ -283,7 +283,7 @@ def main_loop():
                 if not drag:
                     x, y = pygame.mouse.get_pos()
                     if abs(x - mouse_sx) < 10 and abs(y - mouse_sy) < 10:
-                        if x < 20 and y < 20:
+                        if x < 30 and y < 30:
                             return
                         elif y < SCREEN_RESOLUTION[1] / 4:
                             if map_level > 2:
