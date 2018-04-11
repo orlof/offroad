@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python3 ev3_engine.py
+python3 dashboard.py
