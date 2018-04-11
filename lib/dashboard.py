@@ -184,14 +184,14 @@ def android_reader():
                 roll = angles["roll"]
 
                 loc = data["location"]
-                print (loc["speed"])
+                #print (loc["speed"])
                 speed = round(3.6 * loc["speed"])
                 bearing = loc["bearing"]
                 la = loc["latitude"]
                 lo = loc["longitude"]
-                print("lalo: %s, %s" % (la, lo))
+                #print("lalo: %s, %s" % (la, lo))
                 gps_east, gps_north = map_maker.WGS84_to_TM35FIN(la, lo)
-                print("TM35FIN: %s, %s" % (gps_east, gps_north))
+                #print("TM35FIN: %s, %s" % (gps_east, gps_north))
                 altitude = loc["altitude"]
 
         except (RuntimeError, ConnectionError) as e:
@@ -286,7 +286,9 @@ def main_loop():
                 if not drag:
                     x, y = pygame.mouse.get_pos()
                     if abs(x - mouse_sx) < 10 and abs(y - mouse_sy) < 10:
-                        if y < SCREEN_RESOLUTION[1] / 4:
+                        if x < 20 and y < 20:
+                            return
+                        elif y < SCREEN_RESOLUTION[1] / 4:
                             if map_level > 2:
                                 map_level -= 1
                         elif y > 3 * SCREEN_RESOLUTION[1] / 4:
@@ -368,7 +370,7 @@ def main_loop():
         # magnetometer.draw(screen, (azimuth, (255, 0, 0)), (bearing, (0, 0, 255)))
 
         if centered:
-            print ("%s, %s" % (gps_east, gps_north))
+            # print ("%s, %s" % (gps_east, gps_north))
             map.draw(screen, gps_east, gps_north, map_level)
         else:
             map.draw(screen, man_east, man_north, map_level)
