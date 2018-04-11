@@ -189,7 +189,9 @@ def android_reader():
                 bearing = loc["bearing"]
                 la = loc["latitude"]
                 lo = loc["longitude"]
+                print("lalo: %s, %s" % (la, lo))
                 gps_east, gps_north = map_maker.WGS84_to_TM35FIN(la, lo)
+                print("TM35FIN: %s, %s" % (gps_east, gps_north))
                 altitude = loc["altitude"]
 
         except (RuntimeError, ConnectionError) as e:
@@ -366,6 +368,7 @@ def main_loop():
         # magnetometer.draw(screen, (azimuth, (255, 0, 0)), (bearing, (0, 0, 255)))
 
         if centered:
+            print ("%s, %s" % (gps_east, gps_north))
             map.draw(screen, gps_east, gps_north, map_level)
         else:
             map.draw(screen, man_east, man_north, map_level)

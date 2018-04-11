@@ -1,0 +1,14 @@
+[Unit]
+Description=Dashboard service
+After=network-online.target
+Requires=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/offroad/lib
+ExecStart=/home/pi/offroad/dashboard.sh
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
